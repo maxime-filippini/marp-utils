@@ -1,0 +1,34 @@
+/*
+* @theme mfi-base
+*/
+
+@import "default";
+
+h1 {
+  color: #702f8a;
+}
+
+h2 {
+  color: #542367;
+}
+
+.footer h2 {
+  color: #fff;
+}
+
+section {
+  background-color: #eff1f5;
+}
+
+section.divider {
+  background-color: #702f8a;
+}
+
+section.divider h1 {
+  color: white;
+}
+
+section.divider header,
+footer {
+  color: #702f8a;
+}
