@@ -10,7 +10,7 @@ class MarpProcessor:
     tag_dict = {"divider": Divider}
 
     def __init__(self):
-        ...
+        pass
 
     def _parse_frontmatter(self, section):
         frontmatter = yaml.safe_load(section)
