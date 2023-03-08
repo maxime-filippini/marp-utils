@@ -83,6 +83,7 @@ def main():
         '--out_path',
         '-o',
         action='store',
+        default=None,
         help='The path to the output file',
     )
 
