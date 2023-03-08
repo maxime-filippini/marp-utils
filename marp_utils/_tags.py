@@ -1,17 +1,42 @@
-class Tag:
-    ...
+from __future__ import annotations
+
+from abc import ABC
+from abc import abstractmethod
+
+from ._exceptions import NoMatchingCodeBlockError
 
 
-class Divider(Tag):
-    id = "divider"
+class BaseTag(ABC):
+    @abstractmethod
+    def expand(self) -> str:
+        ...
 
-    def expand(self, id, title):
+
+class Section(BaseTag):
+    def expand(self, id, title, **kwargs) -> str:
         directives = [
             f'<!-- _header: <div id="{id}"></div> -->',
-            f"<!-- _class: divider -->",
+            '<!-- _class: divider -->',
         ]
 
         if title:
-            directives.append(f"# {title}")
+            directives.append(f'# {title}')
 
-        return "\n".join(directives)
+        return '\n'.join(directives)
+
+
+class Title(BaseTag):
+    def expand(self, **kwargs) -> str:
+        return '<!-- _class: title -->'
+
+
+class Code(BaseTag):
+    def expand(self, id, code_blocks, **kwargs):
+        try:
+            output = next(
+                block.output for block in code_blocks if block.params.get('id') == id
+            )
+        except StopIteration:
+            raise NoMatchingCodeBlockError(id)
+
+        return f'```python\n{output}\n```'

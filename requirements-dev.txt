@@ -1,3 +1,7 @@
-flake8
+bandit
 black
 commitizen
+coverage
+pre-commit
+prospector[with_everything]
+pytest
