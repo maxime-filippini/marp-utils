@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -14,9 +15,15 @@ from ._tags import Section
 from ._tags import Title
 from marp_utils import _code
 
-RE_COMMENT = r'<!--\s(\w+)(?:\:\s(.+))?\s-->'
+RE_COMMENT = r"<!--\s(\w+)(?:\:\s(.+))?\s-->"
 RE_PARAMS = r'(\w+)="([^"]+)"'
-RE_CODE_BLOCKS_SETUP = '```python(?:.+?)(\\#\\s<\n(?:.+?)\n\\#\\s>\n)(?:.+?)```'
+RE_CODE_BLOCKS_SETUP = "```python(?:.+?)(\\#\\s<\n(?:.+?)\n\\#\\s>\n)(?:.+?)```"
+
+
+@dataclass
+class FileContent:
+    frontmatter: dict[str, Any]
+    sections: list[str]
 
 
 class FileUpdateHandler(PatternMatchingEventHandler):
@@ -26,29 +33,38 @@ class FileUpdateHandler(PatternMatchingEventHandler):
         file_path: str,
         out_path: str,
         export_path: str | None,
+        theme_path: str | None,
     ):
-        super().__init__(patterns=[file_path])
+        patterns = [file_path]
+
+        if theme_path:
+            patterns.append(theme_path)
+
+        super().__init__(patterns=patterns)
         self.processor = processor
         self.file_path = file_path
         self.out_path = out_path
         self.export_path = export_path
 
     def on_modified(self, event):
-        self.processor.process_file(
+        file_content = self.processor.process_file(
             path=self.file_path,
             out_path=self.out_path,
         )
-        print(f'File updated [{self.out_path}]!')
+        print(f"File updated [{self.out_path}]!")
 
         if self.export_path:
+            var_dict = file_content.frontmatter.get("variables", {})
+
             self.processor.export_file(
                 path=self.out_path,
                 out_path=self.export_path,
                 include_html=True,
+                theme_path=var_dict.get("theme_path"),
             )
 
 
-def process_file_on_save(processor, file_path, out_path, export_path):
+def process_file_on_save(processor, file_path, out_path, export_path, theme_path=None):
     observer = Observer()
     event_handler = FileUpdateHandler(
         processor=processor,
@@ -57,7 +73,7 @@ def process_file_on_save(processor, file_path, out_path, export_path):
         export_path=export_path,
     )
 
-    print(f'Now watching [{file_path}]!')
+    print(f"Now watching [{file_path}]!")
 
     observer.schedule(event_handler, Path(file_path).parent, recursive=False)
     observer.start()
@@ -73,7 +89,13 @@ def process_file_on_save(processor, file_path, out_path, export_path):
 class MarpProcessor:
     """Processor for Marp presentation files."""
 
-    tag_dict = {'section': Section, 'code': Code, 'title': Title}
+    tag_dict = {"section": Section, "code": Code, "title": Title}
+
+    def get_sections(self, text):
+        return [x for x in text.split("---") if x]
+
+    def get_frontmatter(self, text):
+        return self.get_sections(text)[0]
 
     def _parse_frontmatter(self, section_text: str) -> str:
         """Parse the YAML frontmatter of the presentation file.
@@ -89,7 +111,7 @@ class MarpProcessor:
         """
         frontmatter = yaml.safe_load(section_text)
 
-        if 'marp' not in frontmatter or not frontmatter.get('marp'):
+        if "marp" not in frontmatter or not frontmatter.get("marp"):
             raise ValueError("'marp: true' not found in frontmatter!")
 
         return frontmatter
@@ -115,12 +137,12 @@ class MarpProcessor:
         out = []
         for line in section_lines:
             for k, v in var_dict.items():
-                line = line.replace(f'${{{k}}}', str(v))
+                line = line.replace(f"${{{k}}}", str(v))
 
             new_text = self._expand_comment(line, code_blocks=code_blocks)
             out.append(new_text)
 
-        return '\n'.join(out)
+        return "\n".join(out)
 
     def _expand_comment(self, line: str, code_blocks: list[_code.CodeBlockData]) -> str:
         """Expand a command
@@ -140,7 +162,7 @@ class MarpProcessor:
         id, params_text = match.groups()
 
         if params_text is None:
-            params_text = ''
+            params_text = ""
 
         if id not in self.tag_dict:
             return line
@@ -157,7 +179,7 @@ class MarpProcessor:
         return {k: v for k, v in param_items}
 
     def get_comments(self, data):
-        all_comments = re.findall(f'({RE_COMMENT})', data)
+        all_comments = re.findall(f"({RE_COMMENT})", data)
 
         out = []
         for comment, id, param_text in all_comments:
@@ -165,9 +187,9 @@ class MarpProcessor:
 
             out.append(
                 {
-                    'id': id,
-                    'comment': comment,
-                    'params': params,
+                    "id": id,
+                    "comment": comment,
+                    "params": params,
                 },
             )
 
@@ -178,18 +200,18 @@ class MarpProcessor:
 
     def process_file(self, path, out_path):
         # Read data
-        with open(path, encoding='utf-8') as fp:
+        with open(path, encoding="utf-8") as fp:
             data = fp.read()
 
         # Get all of the code blocks and run them
         code_blocks = self.get_code_blocks(data)
 
         # Get all of the section text
-        sections = [section.strip() for section in data.split('---') if section]
+        sections = [section.strip() for section in data.split("---") if section]
 
         # Read frontmatter
         frontmatter = self._parse_frontmatter(sections[0])
-        variable_dict = frontmatter['variables']
+        variable_dict = frontmatter["variables"]
 
         # Re-build each section
         new_sections = []
@@ -204,29 +226,34 @@ class MarpProcessor:
 
         # Re-build the file
         out_path = Path(out_path)
-        out_str = '---\n\n' + '\n\n---\n\n'.join(new_sections)
+        out_str = "---\n\n" + "\n\n---\n\n".join(new_sections)
 
         # Remove set up lines from code blocks
         setup_lines = re.findall(RE_CODE_BLOCKS_SETUP, out_str, re.DOTALL)
         for setup_block in setup_lines:
-            out_str = out_str.replace(setup_block, '')
+            out_str = out_str.replace(setup_block, "")
 
-        with open(out_path, 'w', encoding='utf-8') as fp:
+        with open(out_path, "w", encoding="utf-8") as fp:
             fp.write(out_str)
 
-        print(f'Processed file [{path}] -> [{out_path}]')
+        print(f"Processed file [{path}] -> [{out_path}]")
 
-    def export_file(self, path, out_path, include_html=False):
+        return FileContent(frontmatter=frontmatter, sections=new_sections)
+
+    def export_file(self, path, out_path, include_html=False, theme_path=None):
         args = [
-            *('marp', path),
-            *('-o', out_path),
-            '--pdf',
-            '--pdf-outlines',
-            '--pdf-outlines.pages=false',
-            '--allow-local-files',
+            *("marp", str(path)),
+            *("-o", str(out_path)),
+            "--pdf",
+            "--pdf-outlines",
+            "--pdf-outlines.pages=false",
+            "--allow-local-files",
         ]
 
         if include_html:
-            args.append('--html')
+            args.append("--html")
+
+        if theme_path:
+            args += ["--theme", theme_path]
 
         return subprocess.Popen(args)

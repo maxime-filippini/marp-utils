@@ -6,9 +6,9 @@ import re
 import sys
 from dataclasses import dataclass
 
-RE_CODE_BLOCK = r'```python\s?([^\n]*)\n(.+?)\n```\n'
-RE_SETUP_TEXT = '\\#\\s<\n(\\#\\s(.+?)\n*)\\#\\s>\n'
-RE_SETUP_LINES = '\\#\\s(.+?)\n'
+RE_CODE_BLOCK = r"```python\s?([^\n]*)\n(.+?)\n```\n"
+RE_SETUP_TEXT = "\\#\\s<\n(\\#\\s(.+?)\n*)\\#\\s>\n"
+RE_SETUP_LINES = "\\#\\s(.+?)\n"
 RE_PARAMS = r'([\w|_]+)="([^"]*)"'
 
 
@@ -89,20 +89,20 @@ def get_python_code_blocks(text: str) -> list[CodeBlockData]:
         # Parameters
         params = {k: v for k, v in re.findall(RE_PARAMS, block_params)}
 
-        if 'run' in params:
-            run = params['run']
+        if "run" in params:
+            run = params["run"]
 
-            if run.lower() == 'false':
+            if run.lower() == "false":
                 run = False
-            elif run.lower() == 'true':
+            elif run.lower() == "true":
                 run = True
             else:
                 run = bool(int(run))
 
-            params['run'] = run
+            params["run"] = run
 
         else:
-            params['run'] = False
+            params["run"] = False
 
         if run:
             output = run_code(setup_lines=setup, code_lines=code)
@@ -138,7 +138,7 @@ def run_code(setup_lines: list[str], code_lines: list[str]) -> str:
 
     with capture_stdout() as stdout_:
         for line in code_lines:
-            if not line.startswith('#'):
+            if not line.startswith("#"):
                 eval(line)
 
     return stdout_.getvalue().strip()

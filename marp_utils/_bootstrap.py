@@ -13,8 +13,8 @@ from inquirer.themes import GreenPassion
 
 from ._theme import read_theme_name_from_file
 
-LINE_FEED = '\n'
-SECTION_SEP = '---'
+LINE_FEED = "\n"
+SECTION_SEP = "---"
 NEXT_SECTION_SEP = LINE_FEED * 2 + SECTION_SEP + LINE_FEED * 2
 
 
@@ -36,16 +36,16 @@ def make_comment(id_: str, **kwargs) -> str:
         str: Formatted string.
     """
     if kwargs:
-        param_str = ': ' + ' '.join(f'{k}="{v}"' for k, v in kwargs.items())
+        param_str = ": " + " ".join(f'{k}="{v}"' for k, v in kwargs.items())
     else:
-        param_str = ''
+        param_str = ""
 
-    return ''.join(
+    return "".join(
         (
-            '<!-- ',
-            f'{id_}',
+            "<!-- ",
+            f"{id_}",
             param_str,
-            ' -->',
+            " -->",
         ),
     )
 
@@ -59,7 +59,7 @@ class Bootstrapper:
         event: str | None = None,
         header: str | None = None,
         footer: str | None = None,
-        theme: str = 'gaia',
+        theme: str = "gaia",
         theme_path: os.PathLike | None = None,
         sections: list[str] | None = None,
         variables: dict[str, Any] | None = None,
@@ -91,17 +91,17 @@ class Bootstrapper:
     def header(self):
         if self._header:
             return self._header
-        return '[*${title}*](#1)'
+        return "[*${title}*](#1)"
 
     @property
     def event_date(self):
-        out = ''
+        out = ""
 
         if self.event:
-            out += '*${event}* '
+            out += "*${event}* "
 
         if self.date:
-            out += '${date}'
+            out += "${date}"
 
         return out
 
@@ -117,7 +117,7 @@ class Bootstrapper:
         out = self._variables
 
         # Add relevant variables
-        for field in ['title', 'subtitle', 'date', 'event', 'theme_path']:
+        for field in ["title", "subtitle", "date", "event", "theme_path"]:
             data = getattr(self, field)
             if data is not None and getattr(self, field):
                 out[field] = data
@@ -129,51 +129,51 @@ class Bootstrapper:
         """str: Parsed YAML frontmatter."""
         return yaml.dump(
             {
-                'marp': True,
-                'theme': self.theme,
-                'variables': self.variables,
+                "marp": True,
+                "theme": self.theme,
+                "variables": self.variables,
             },
         )[:-1]
 
     @property
     def first_slide(self) -> str:
         """str: First slide of the presentation."""
-        to_write = [make_comment('title'), '# ${title}']
+        to_write = [make_comment("title"), "# ${title}"]
 
         if self.subtitle:
-            to_write.append('## ${subtitle}')
+            to_write.append("## ${subtitle}")
 
         if self.event_date:
             to_write.append(self.event_date)
 
-        return '\n'.join(to_write)
+        return "\n".join(to_write)
 
     @property
     def extra_directives(self) -> str:
         out = []
 
-        if 'header' in self.options:
+        if "header" in self.options:
             out.append(f"<!-- header: '{self.header}' -->")
 
-        if 'footer' in self.options:
+        if "footer" in self.options:
             out.append(f"<!-- footer: '{self.footer}' -->")
 
-        if 'paginate' in self.options:
-            out.append('<!-- paginate: true -->')
+        if "paginate" in self.options:
+            out.append("<!-- paginate: true -->")
 
-        if 'img_center' in self.options:
+        if "img_center" in self.options:
             out.append(
                 (
-                    '<style>\n'
-                    'img[alt~=center] {\n'
-                    '    display: block;\n'
-                    '    margin: 0 auto;\n'
-                    '}\n'
-                    '</style>'
+                    "<style>\n"
+                    "img[alt~=center] {\n"
+                    "    display: block;\n"
+                    "    margin: 0 auto;\n"
+                    "}\n"
+                    "</style>"
                 ),
             )
 
-        return '\n'.join(out)
+        return "\n".join(out)
 
     def toc(self) -> str:
         """Add Table of contents placeholder slide.
@@ -181,7 +181,7 @@ class Bootstrapper:
         Returns:
             str: Table of contents placeholder slide.
         """
-        return '# Table of contents\n' + make_comment(id_='toc')
+        return "# Table of contents\n" + make_comment(id_="toc")
 
     def section_divider(self, id: str, title: str) -> str:
         """Builds a section divider marker.
@@ -193,7 +193,7 @@ class Bootstrapper:
         Returns:
             str: Comment that marks a section divider.
         """
-        return make_comment(id_='section', id=id, title=title)
+        return make_comment(id_="section", id=id, title=title)
 
     def blank_sections(self) -> str:
         """Build placeholder slides for sections.
@@ -205,11 +205,11 @@ class Bootstrapper:
 
         for section in self.sections:
             divider_tag = self.section_divider(
-                id=section.lower().replace(' ', '-'),
+                id=section.lower().replace(" ", "-"),
                 title=section,
             )
 
-            content = f'## {section} \n Start writing your content here!'
+            content = f"## {section} \n Start writing your content here!"
             out.append((divider_tag, content))
 
         return out
@@ -237,7 +237,7 @@ class Bootstrapper:
             to_write.append(LINE_FEED)
             to_write.append(LINE_FEED)
 
-        if 'table_of_contents' in self.options:
+        if "table_of_contents" in self.options:
             to_write.append(self.toc())
             to_write.append(NEXT_SECTION_SEP)
 
@@ -247,8 +247,8 @@ class Bootstrapper:
             to_write.append(content)
             to_write.append(NEXT_SECTION_SEP)
 
-        with open(file_path, 'w', encoding='utf-8') as fp:
-            fp.write(''.join(to_write))
+        with open(file_path, "w", encoding="utf-8") as fp:
+            fp.write("".join(to_write))
 
 
 def ask_for_sections(
@@ -274,18 +274,18 @@ def ask_for_sections(
 
     questions = [
         inquirer.Text(
-            'section',
+            "section",
             message=(
-                f'What is the title of section #{i+1}? '
-                '(leave empty to finish process)'
+                f"What is the title of section #{i+1}? "
+                "(leave empty to finish process)"
             ),
         ),
     ]
 
     answers = inquirer.prompt(questions, theme=GreenPassion())
 
-    if answers['section']:
-        prev_answers[f'section_{i}'] = answers['section']
+    if answers["section"]:
+        prev_answers[f"section_{i}"] = answers["section"]
         out_answers = ask_for_sections(i=i + 1, prev_answers=prev_answers)
     else:
         out_answers = prev_answers
@@ -297,14 +297,14 @@ def validate_output_path(path):
     path = Path(path)
     if not path.parent.exists():
         raise ValueError(
-            'Path provided corresponds to a non-existent directory'
-            f' [{path.parent.resolve()}]!',
+            "Path provided corresponds to a non-existent directory"
+            f" [{path.parent.resolve()}]!",
         )
 
-    if path.suffix != '.md':
+    if path.suffix != ".md":
         raise ValueError(
-            'Path provided is not a valid markdown file '
-            f'(extension [{path.suffix}], rather than [.md])',
+            "Path provided is not a valid markdown file "
+            f"(extension [{path.suffix}], rather than [.md])",
         )
 
     return True
@@ -312,79 +312,79 @@ def validate_output_path(path):
 
 def boostrap_presentation(full: bool = False) -> None:
     """Script for bootstrapping a presentation."""
-    print('-' * 32)
-    print('Marp Presentation Bootstrapper')
-    print('-' * 32)
-    print('')
+    print("-" * 32)
+    print("Marp Presentation Bootstrapper")
+    print("-" * 32)
+    print("")
 
     questions = [
         inquirer.Text(
-            'output_path',
+            "output_path",
             message="Path to file (has to end in '.md')",
             validate=lambda answers, path: validate_output_path(path),
         ),
-        inquirer.Text('title', message='What is the title of your presentation?'),
+        inquirer.Text("title", message="What is the title of your presentation?"),
         inquirer.Text(
-            'subtitle',
-            message='What is the sub-title of your presentation?',
+            "subtitle",
+            message="What is the sub-title of your presentation?",
             default=None,
         ),
-        inquirer.Text('event', message='What is the event of your presentation?'),
+        inquirer.Text("event", message="What is the event of your presentation?"),
         inquirer.Text(
-            'date',
-            message='What is the date of your presentation?',
+            "date",
+            message="What is the date of your presentation?",
         ),
         inquirer.Checkbox(
-            'options',
-            message='Pick the optional components you would like',
+            "options",
+            message="Pick the optional components you would like",
             choices=[
-                'pagination',
-                'header',
-                'footer',
-                'img-center',
-                'table_of_contents',
+                "pagination",
+                "header",
+                "footer",
+                "img-center",
+                "table_of_contents",
             ],
         ),
         inquirer.Text(
-            'header',
-            message='What to display in the header (top of each slide)',
+            "header",
+            message="What to display in the header (top of each slide)",
             ignore=lambda answers: (not full)
-            or ('header' not in answers.get('options')),
+            or ("header" not in answers.get("options")),
         ),
         inquirer.Text(
-            'footer',
-            message='What to display in the footer (bottom of each slide)',
+            "footer",
+            message="What to display in the footer (bottom of each slide)",
             ignore=lambda answers: (not full)
-            or ('footer' not in answers.get('options')),
+            or ("footer" not in answers.get("options")),
         ),
         inquirer.List(
-            'theme',
-            message='What theme do you want to use?',
-            choices=['gaia', 'uncover', 'custom'],
+            "theme",
+            message="What theme do you want to use?",
+            choices=["gaia", "uncover", "custom"],
         ),
         inquirer.Path(
-            'theme_path',
-            message='Path to custom theme',
-            path_type='file',
-            ignore=lambda answers: (answers.get('theme') != 'custom'),
+            "theme_path",
+            message="Path to custom theme",
+            path_type="file",
+            ignore=lambda answers: (answers.get("theme") != "custom"),
         ),
-        inquirer.Confirm('sections', message='Do you want to add sections?'),
+        inquirer.Confirm("sections", message="Do you want to add sections?"),
     ]
 
     answers = inquirer.prompt(questions, theme=GreenPassion())
 
-    theme_path = answers.get('theme_path')
+    theme_path = answers.get("theme_path")
 
     # Update the theme based on the path
     if theme_path is not None:
-        answers['theme'] = read_theme_name_from_file(theme_path)
+        answers["theme"] = read_theme_name_from_file(theme_path)
 
-    if answers['sections']:
-        answers['sections'] = list(ask_for_sections().values())
+    if answers["sections"]:
+        answers["sections"] = list(ask_for_sections().values())
     else:
-        answers['sections'] = []
+        answers["sections"] = []
 
-    file_path = answers.pop('output_path')
+    file_path = answers.pop("output_path")
 
     bootstrapper = Bootstrapper(**answers)
     bootstrapper.bootstrap(file_path=file_path)
