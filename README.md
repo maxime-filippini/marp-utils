@@ -25,7 +25,7 @@ The `bootstrap` command only has one parameter:
 
 With the `process` command, the following items from your presentation can be acted upon:
 
-- Any variable found in the body, which abides by the `${var_name}` syntax, will be replaced by the value supplied in the appropriate field in the frontmatter of the file. This process expects a `variable` dictionary in the frontmatter. An example of use case would be multiple references to the title of the presentation, for which the frontmatter and the first slide could look like this:
+- Any variable found in the body, which abides by the `${var_name}` syntax, will be replaced by the value supplied in the appropriate field in the frontmatter of the file. This process expects a `variables` dictionary in the frontmatter. An example of use case would be multiple references to the title of the presentation, for which the frontmatter and the first slide could look like this:
 
     ```markdown
     ---
@@ -123,4 +123,3 @@ Here are some elements which are being/will be worked on to make `marputils` bet
 
 - [ ] Automated table of contents based on dividers/headings
 - [ ] Make it so only lines which have a comment or a variable need to be parsed.
-- [ ] Enable way to register the tags so the processor can directly know the subclasses available
